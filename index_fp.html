@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Flight Simulator with A-Frame and Physics</title>
+  <script src="https://aframe.io/releases/1.4.2/aframe.min.js"></script>
+  <script src="https://cdn.rawgit.com/donmccurdy/aframe-extras/v4.1.2/dist/aframe-extras.min.js"></script>
+  <script src="https://cdn.rawgit.com/schteppe/cannon.js/master/build/cannon.min.js"></script>
+</head>
+<body>
+<a-scene physics="debug: true">
+  <!-- Plane Model with Camera Attached -->
+  <a-entity
+          id="plane"
+          position="0 2 0"
+          rotation="0 0 0"
+          gltf-model="src/models/plane_low_poly.glb"
+          scale="0.5 0.5 0.5"
+          dynamic-body="mass: 5; shape: box"
+  >
+    <a-entity id="camera" position="0 1 -5">
+      <a-camera wasd-controls="enabled: false"></a-camera>
+    </a-entity>
+  </a-entity>
+</a-scene>
+
+<script>
+  document.addEventListener("DOMContentLoaded", () => {
+    const plane = document.getElementById("plane");
+    let speed = 0;
+    let pitch = 0;
+    let yaw = 0;
+    const rotationSpeed = 2;
+
+    // Keyboard controls
+    const keys = {};
+    document.addEventListener(
+            "keydown",
+            (event) => (keys[event.code] = true)
+    );
+    document.addEventListener(
+            "keyup",
+            (event) => (keys[event.code] = false)
+    );
+
+    function degToRad(degrees) {
+      return degrees * (Math.PI / 180);
+    }
+
+    function updatePlaneMovement() {
+      if (keys["ArrowUp"]) pitch = -rotationSpeed;
+      else if (keys["ArrowDown"]) pitch = rotationSpeed;
+      else pitch = 0;
+
+      if (keys["ArrowLeft"]) yaw = rotationSpeed;
+      else if (keys["ArrowRight"]) yaw = -rotationSpeed;
+      else yaw = 0;
+
+      if (keys["KeyW"]) speed += 0.002;
+      if (keys["KeyS"]) speed -= 0.002;
+      speed = Math.max(0, Math.min(0.2, speed)); // Speed limits
+
+      if (pitch !== 0 || yaw !== 0 || speed !== 0) {
+        // Apply movement
+        let rotation = plane.getAttribute("rotation");
+        rotation.x += pitch;
+        rotation.y += yaw;
+        plane.setAttribute("rotation", rotation);
+
+        let position = plane.getAttribute("position");
+        position.z -= speed * Math.cos(degToRad(rotation.y));
+        position.x -= speed * Math.sin(degToRad(rotation.y));
+        plane.setAttribute("position", position);
+      }
+    }
+
+    function animate() {
+      updatePlaneMovement();
+      requestAnimationFrame(animate);
+    }
+    animate();
+  });
+</script>
+
+<div
+        style="
+        position: fixed;
+        top: 10px;
+        left: 10px;
+        background: rgba(0, 0, 0, 0.5);
+        color: white;
+        padding: 10px;
+        font-family: Arial;
+      "
+>
+  <h3>Controls</h3>
+  <p>Arrow Up/Down - Pitch</p>
+  <p>Arrow Left/Right - Yaw</p>
+  <p>W - Increase Speed</p>
+  <p>S - Decrease Speed</p>
+</div>
+</body>
+</html>
