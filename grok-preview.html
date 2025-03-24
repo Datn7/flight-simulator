@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Plane Flight Simulator MVP</title>
+    <script src="https://aframe.io/releases/1.5.0/aframe.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r134/three.min.js"></script>
+</head>
+<body>
+    <a-scene>
+        <!-- Simple plane -->
+        <a-box 
+            id="plane" 
+            position="0 2 -5" 
+            rotation="0 0 0" 
+            width="2" 
+            height="0.2" 
+            depth="3" 
+            color="#4CC3D9"
+            material="metalness: 0.5">
+            <a-box 
+                position="0 0 0" 
+                width="4" 
+                height="0.1" 
+                depth="1" 
+                color="#FFFFFF">
+            </a-box>
+        </a-box>
+
+        <!-- Sky -->
+        <a-sky color="#87CEEB"></a-sky>
+
+        <!-- Ground -->
+        <a-plane 
+            position="0 0 -10" 
+            rotation="-90 0 0" 
+            width="100" 
+            height="100" 
+            color="#7BC8A4">
+        </a-plane>
+
+        <!-- Trees -->
+        <a-entity position="-10 0 -20">
+            <a-cylinder position="0 1 0" radius="0.5" height="2" color="#8B4513"></a-cylinder>
+            <a-cone position="0 2.5 0" radius-bottom="2" radius-top="0" height="3" color="#228B22"></a-cone>
+        </a-entity>
+        <a-entity position="15 0 -25">
+            <a-cylinder position="0 1 0" radius="0.5" height="2" color="#8B4513"></a-cylinder>
+            <a-cone position="0 2.5 0" radius-bottom="2" radius-top="0" height="3" color="#228B22"></a-cone>
+        </a-entity>
+        <a-entity position="5 0 -40">
+            <a-cylinder position="0 1 0" radius="0.5" height="2" color="#8B4513"></a-cylinder>
+            <a-cone position="0 2.5 0" radius-bottom="2" radius-top="0" height="3" color="#228B22"></a-cone>
+        </a-entity>
+
+        <!-- Buildings -->
+        <a-box position="-20 2 -30" width="4" height="4" depth="4" color="#808080"></a-box>
+        <a-box position="20 3 -35" width="6" height="6" depth="6" color="#696969"></a-box>
+
+        <!-- Clouds -->
+        <a-sphere position="-15 10 -25" radius="2" color="#FFFFFF" opacity="0.7"></a-sphere>
+        <a-sphere position="-12 11 -23" radius="1.5" color="#FFFFFF" opacity="0.7"></a-sphere>
+        <a-sphere position="10 12 -30" radius="2" color="#FFFFFF" opacity="0.7"></a-sphere>
+        <a-sphere position="13 13 -28" radius="1.5" color="#FFFFFF" opacity="0.7"></a-sphere>
+
+        <!-- Camera -->
+        <a-entity 
+            id="camera" 
+            camera 
+            position="0 5 5" 
+            look-controls>
+        </a-entity>
+    </a-scene>
+
+    <script>
+        AFRAME.registerComponent('plane-controls', {
+            init: function () {
+                this.el = this.el;
+                this.velocity = new THREE.Vector3(0, 0, 0);
+                this.speed = 0.1;
+                this.rotationSpeed = 1;
+                
+                document.addEventListener('keydown', this.onKeyDown.bind(this));
+            },
+
+            tick: function (time, delta) {
+                const plane = this.el;
+                const position = plane.getAttribute('position');
+                const rotation = plane.getAttribute('rotation');
+
+                // Apply velocity to position
+                position.x += this.velocity.x * (delta / 100);
+                position.y += this.velocity.y * (delta / 100);
+                position.z += this.velocity.z * (delta / 100);
+
+                // Keep plane above ground
+                if (position.y < 0.2) position.y = 0.2;
+
+                plane.setAttribute('position', position);
+
+                // Update camera to follow plane
+                const camera = document.querySelector('#camera');
+                const cameraPos = {
+                    x: position.x,
+                    y: position.y + 3,
+                    z: position.z + 5
+                };
+                camera.setAttribute('position', cameraPos);
+            },
+
+            onKeyDown: function (event) {
+                const rotation = this.el.getAttribute('rotation');
+
+                switch(event.key) {
+                    case 'w':
+                        this.velocity.z = -this.speed;
+                        break;
+                    case 's':
+                        this.velocity.z = this.speed;
+                        break;
+                    case 'a':
+                        rotation.y += this.rotationSpeed;
+                        break;
+                    case 'd':
+                        rotation.y -= this.rotationSpeed;
+                        break;
+                    case 'e':
+                        this.velocity.y = this.speed;
+                        break;
+                    case 'q':
+                        this.velocity.y = -this.speed;
+                        break;
+                }
+
+                this.el.setAttribute('rotation', rotation);
+
+                document.addEventListener('keyup', (e) => {
+                    if (e.key === 'e' || e.key === 'q') {
+                        this.velocity.y = 0;
+                    }
+                    if (e.key === 'w' || e.key === 's') {
+                        this.velocity.z = 0;
+                    }
+                });
+            }
+        });
+
+        document.querySelector('#plane').setAttribute('plane-controls', '');
+    </script>
+</body>
+</html>
